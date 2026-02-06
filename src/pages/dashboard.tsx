@@ -67,8 +67,8 @@ export default function Dashboard() {
     if (!content) return;
     
     const parsed = parseInt(numQuestions, 10);
-    if (!parsed || parsed < 3 || parsed > 50 || !Number.isInteger(parsed)) {
-      setError('Please enter a whole number between 3 and 50');
+    if (!parsed || parsed < 3 || parsed > 20 || !Number.isInteger(parsed)) {
+      setError('Please enter a whole number between 3 and 20');
       return;
     }
     setIsGenerating(true);
@@ -537,19 +537,19 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-2">Number of Questions (3–50)</label>
+              <label className="block text-sm text-white/70 mb-2">Number of Questions (3–20)</label>
               <input
                 type="number"
                 min={3}
-                max={50}
+                max={20}
                 step={1}
                 value={numQuestions}
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, '');
                   setNumQuestions(val);
                   const num = parseInt(val, 10);
-                  if (val && (!num || num < 3 || num > 50)) {
-                    setError('Please enter a number between 3 and 50');
+                  if (val && (!num || num < 3 || num > 20)) {
+                    setError('Please enter a number between 3 and 20');
                   } else {
                     setError(null);
                   }
@@ -565,7 +565,7 @@ export default function Dashboard() {
                 isGenerating ||
                 !numQuestions ||
                 parseInt(numQuestions, 10) < 3 ||
-                parseInt(numQuestions, 10) > 50
+                parseInt(numQuestions, 10) > 20
               }
               className="w-full mt-4"
             >

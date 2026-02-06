@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: `${mode === 'topic' ? 'Topic' : 'Study guide'} is required` });
   }
 
-  const safeCount = Math.min(Math.max(Number(count) || 10, 3), 50);
+  const safeCount = Math.min(Math.max(Number(count) || 10, 3), 20);
   const safeQuestionType = questionType || 'multiple-choice';
 
   const apiKey = process.env.GROQ_API_KEY;
