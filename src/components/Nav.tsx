@@ -59,7 +59,7 @@ export default function Nav() {
   }, []);
 
   return (
-    <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
+    <header className="relative flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-glow via-flare to-sun text-ink">
           <span className="font-display text-lg font-bold">Q</span>
@@ -85,10 +85,13 @@ export default function Nav() {
           </Link>
         )}
         {user ? (
-          <div className="relative" ref={dropdownRef}>
+          <div
+            className="absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto"
+            ref={dropdownRef}
+          >
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-ink font-bold text-sm transition hover:opacity-90 overflow-hidden`}
+              className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-ink font-bold text-base transition hover:opacity-90 overflow-hidden sm:h-9 sm:w-9 sm:text-sm`}
             >
               {user.photoURL ? (
                 <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
