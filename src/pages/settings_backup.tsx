@@ -306,7 +306,7 @@ export default function Settings() {
                     )}
                 </Card>
 
-                {/* Delete Account */
+                {/* Delete Account */}
                 <Card variant="panel" className="p-6 md:p-8 border-red-500/30">
                     <h2 className="font-display text-2xl font-semibold mb-2 text-red-400">Danger Zone</h2>
                     <p className="text-sm text-white/60 mb-6">
