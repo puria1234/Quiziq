@@ -86,7 +86,7 @@ export default function Nav() {
         )}
         {user ? (
           <div
-            className="absolute right-4 top-1/2 z-50 -translate-y-1/2 sm:relative sm:right-auto sm:top-auto sm:translate-y-0"
+            className="absolute right-3 top-1/2 z-50 -translate-y-1/2 sm:relative sm:right-auto sm:top-auto sm:translate-y-0"
             ref={dropdownRef}
           >
             <button
