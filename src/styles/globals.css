@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Sora:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+body {
+  @apply bg-ink text-white font-body;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 95, 109, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(22, 242, 242, 0.2), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(255, 195, 113, 0.18), transparent 40%),
+    #0b0b14;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.gradient-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px rgba(11, 11, 20, 0.7);
+  backdrop-filter: blur(18px);
+}
+
+.glass-input {
+  @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-glow/70;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold tracking-wide text-ink transition;
+  background: linear-gradient(120deg, #16f2f2, #ff5f6d, #ffc371);
+  background-size: 200% 200%;
+  animation: shimmer 8s linear infinite;
+}
+
+.btn-primary:disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white;
+}
+
+.badge {
+  @apply rounded-full border border-white/15 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/60;
+}
+
+.badge-gradient {
+  @apply rounded-full border border-transparent bg-gradient-to-r from-glow via-flare to-sun px-3 py-1 text-xs uppercase tracking-[0.2em] text-white font-semibold;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  * {
+    -webkit-tap-highlight-color: rgba(22, 242, 242, 0.1);
+  }
+  
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Smooth scrolling for touch devices */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+.quiz-card {
+  @apply rounded-2xl border border-white/10 bg-white/5 p-5;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes caret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 700ms ease both;
+}
+
+.animate-delay-1 {
+  animation-delay: 120ms;
+}
+
+.animate-delay-2 {
+  animation-delay: 240ms;
+}
+
+.animate-delay-3 {
+  animation-delay: 360ms;
+}
+
+.typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid rgba(255, 255, 255, 0.6);
+  width: 0;
+  animation: typewriter 2.4s steps(30, end) 200ms forwards, caret 900ms step-end infinite;
+}
