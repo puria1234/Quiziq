@@ -59,7 +59,7 @@ export default function Nav() {
   }, []);
 
   return (
-    <header className="relative flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
+    <header className="relative flex flex-col gap-4 overflow-visible rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-glow via-flare to-sun text-ink">
           <span className="font-display text-lg font-bold">Q</span>
@@ -86,7 +86,7 @@ export default function Nav() {
         )}
         {user ? (
           <div
-            className="absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto"
+            className="absolute right-4 top-4 z-50 sm:relative sm:right-auto sm:top-auto"
             ref={dropdownRef}
           >
             <button
@@ -100,7 +100,7 @@ export default function Nav() {
               )}
             </button>
             {showDropdown && (
-              <div className="absolute right-0 top-12 z-50 w-full min-w-[240px] max-w-[280px] sm:w-64 rounded-2xl border border-white/10 bg-[#0a0a0f] p-4 shadow-xl">
+              <div className="absolute right-0 top-14 z-50 w-full min-w-[240px] max-w-[280px] pointer-events-auto sm:w-64 rounded-2xl border border-white/15 bg-[#0a0a0f] p-4 shadow-2xl">
                 <div className="mb-3 pb-3 border-b border-white/10">
                   <p className="font-semibold text-white text-sm sm:text-base">{user.displayName || 'Student'}</p>
                   <p className="text-xs text-white/50 truncate">{user.email}</p>
@@ -108,20 +108,20 @@ export default function Nav() {
                 <Link
                   href="/history"
                   onClick={() => setShowDropdown(false)}
-                  className="mb-2 block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  className="mb-2 block w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white/80 transition hover:bg-white/20 hover:text-white active:scale-95"
                 >
                   Quiz History
                 </Link>
                 <Link
                   href="/settings"
                   onClick={() => setShowDropdown(false)}
-                  className="mb-2 block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  className="mb-2 block w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white/80 transition hover:bg-white/20 hover:text-white active:scale-95"
                 >
                   Settings
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white/80 transition hover:bg-white/20 hover:text-white active:scale-95"
                 >
                   Sign Out
                 </button>
