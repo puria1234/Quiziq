@@ -5,7 +5,7 @@ export default function Document() {
     <Html lang="en" data-scroll-behavior="smooth">
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-        <meta name="theme-color" content="#0b0b14" />
+        <meta name="theme-color" content="#061329" />
       </Head>
       <body>
         <Main />

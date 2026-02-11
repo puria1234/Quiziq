@@ -592,9 +592,9 @@ export default function Dashboard() {
               <svg width="0" height="0" style={{ position: 'absolute' }}>
                 <defs>
                   <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#16f2f2' }} />
-                    <stop offset="50%" style={{ stopColor: '#ff5f6d' }} />
-                    <stop offset="100%" style={{ stopColor: '#ffc371' }} />
+                    <stop offset="0%" style={{ stopColor: '#3b82f6' }} />
+                    <stop offset="50%" style={{ stopColor: '#0ea5e9' }} />
+                    <stop offset="100%" style={{ stopColor: '#f59e0b' }} />
                   </linearGradient>
                 </defs>
               </svg>

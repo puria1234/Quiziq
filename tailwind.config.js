@@ -8,11 +8,11 @@ module.exports = {
         body: ["'Manrope'", "ui-sans-serif", "system-ui"]
       },
       colors: {
-        ink: "#0b0b14",
-        glow: "#16f2f2",
-        flare: "#ff5f6d",
-        sun: "#ffc371",
-        neon: "#7C3AED"
+        ink: "#061329",
+        glow: "#3B82F6",
+        flare: "#0EA5E9",
+        sun: "#F59E0B",
+        neon: "#6366F1"
       },
       keyframes: {
         float: {
@@ -24,8 +24,8 @@ module.exports = {
           "100%": { backgroundPosition: "100% 50%" }
         },
         pulseGlow: {
-          "0%, 100%": { boxShadow: "0 0 0 rgba(22, 242, 242, 0)" },
-          "50%": { boxShadow: "0 0 35px rgba(22, 242, 242, 0.4)" }
+          "0%, 100%": { boxShadow: "0 0 0 rgba(59, 130, 246, 0)" },
+          "50%": { boxShadow: "0 0 35px rgba(59, 130, 246, 0.45)" }
         }
       },
       animation: {

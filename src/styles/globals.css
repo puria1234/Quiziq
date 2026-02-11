@@ -16,10 +16,10 @@ html {
 
 body {
   @apply bg-ink text-white font-body;
-  background: radial-gradient(circle at 20% 20%, rgba(255, 95, 109, 0.18), transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(22, 242, 242, 0.2), transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(255, 195, 113, 0.18), transparent 40%),
-    #0b0b14;
+  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.24), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(14, 165, 233, 0.22), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.18), transparent 40%),
+    #061329;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -38,7 +38,7 @@ body {
 
 .btn-primary {
   @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold tracking-wide text-ink transition;
-  background: linear-gradient(120deg, #16f2f2, #ff5f6d, #ffc371);
+  background: linear-gradient(120deg, #3b82f6, #0ea5e9, #f59e0b);
   background-size: 200% 200%;
   animation: shimmer 8s linear infinite;
 }
@@ -62,7 +62,7 @@ body {
 /* Mobile optimizations */
 @media (max-width: 640px) {
   * {
-    -webkit-tap-highlight-color: rgba(22, 242, 242, 0.1);
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.15);
   }
   
   input,
