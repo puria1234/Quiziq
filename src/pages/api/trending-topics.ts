@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const selected = shuffled.slice(0, 5);
     
     return res.status(200).json({ topics: selected });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Failed to fetch trending topics' });
   }
 }

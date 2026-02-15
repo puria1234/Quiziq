@@ -3,12 +3,13 @@ import Nav from './Nav';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 
+const PUBLIC_PAGES = new Set(['/', '/login', '/signup', '/forgot-password']);
+const AUTH_ONLY_PAGES = new Set(['/login', '/signup']);
+
 export default function Layout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const publicPages = new Set(['/', '/login', '/signup', '/forgot-password']);
-    const authOnlyPages = new Set(['/login', '/signup']);
-    const isPublicPage = publicPages.has(router.pathname);
+    const isPublicPage = PUBLIC_PAGES.has(router.pathname);
 
     useEffect(() => {
         if (loading) return;
@@ -20,10 +21,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }
         
         // If signed in and trying to access login/signup, redirect to dashboard
-        if (user && authOnlyPages.has(router.pathname)) {
+        if (user && AUTH_ONLY_PAGES.has(router.pathname)) {
             router.replace('/dashboard');
         }
-    }, [user, loading, router, isPublicPage, authOnlyPages]);
+    }, [user, loading, router, isPublicPage]);
 
     if (loading && !isPublicPage) {
         return (

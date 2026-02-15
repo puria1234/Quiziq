@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { auth } from '@/lib/firebase';
 import {
     signInWithEmailAndPassword,
@@ -12,11 +12,12 @@ import {
     browserLocalPersistence,
     browserSessionPersistence
 } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-const getErrorMessage = (error: any): string => {
-    const code = error.code || '';
+const getErrorMessage = (error: unknown): string => {
+    const code = error instanceof FirebaseError ? error.code : '';
     
     if (code.includes('auth/invalid-credential') || code.includes('auth/wrong-password') || code.includes('auth/user-not-found')) {
         return 'Invalid email or password';
@@ -61,7 +62,7 @@ export default function Login() {
             await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
             await signInWithEmailAndPassword(auth, email, password);
             router.push('/dashboard');
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setLoading(false);
@@ -77,7 +78,7 @@ export default function Login() {
             await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
             await signInWithPopup(auth, provider);
             router.push('/dashboard');
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setLoading(false);
@@ -92,7 +93,7 @@ export default function Login() {
         return (
             <div className="flex min-h-[80vh] items-center justify-center">
                 <Card variant="panel" className="w-full max-w-md p-8 text-center">
-                    <p className="text-white/70">You're already signed in!</p>
+                    <p className="text-white/70">You&apos;re already signed in!</p>
                     <div className="mt-4 flex gap-3 justify-center">
                         <Button href="/dashboard" variant="primary">Go to Dashboard</Button>
                         <Button href="/" variant="ghost">Go Home</Button>
@@ -163,7 +164,7 @@ export default function Login() {
                 </form>
 
                 <div className="mt-6 text-center text-sm text-white/60">
-                    Don't have an account?{' '}
+                    Don&apos;t have an account?{' '}
                     <Link href="/signup" className="text-glow hover:underline">
                         Sign up
                     </Link>

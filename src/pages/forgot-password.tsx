@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { useState } from 'react';
 import { auth } from '@/lib/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
@@ -20,8 +21,9 @@ export default function ForgotPassword() {
         try {
             await sendPasswordResetEmail(auth, email);
             setSuccess(true);
-        } catch (err: any) {
-            const code = err.code || '';
+        } catch (err: unknown) {
+            const firebaseError = err instanceof FirebaseError ? err : null;
+            const code = firebaseError?.code || '';
             if (code.includes('auth/user-not-found')) {
                 setError('No account found with this email');
             } else if (code.includes('auth/invalid-email')) {

@@ -94,6 +94,7 @@ export default function Nav() {
               className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-ink font-bold text-base transition hover:opacity-90 overflow-hidden sm:h-9 sm:w-9 sm:text-sm`}
             >
               {user.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 initials

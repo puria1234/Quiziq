@@ -2,11 +2,14 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useState, useEffect } from 'react';
-import { auth, db } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { updateProfile, updatePassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+
+const getAuthErrorCode = (error: unknown) => (error instanceof FirebaseError ? error.code : '');
 
 export default function Settings() {
     const { user, loading: authLoading } = useAuth();
@@ -43,7 +46,7 @@ export default function Settings() {
                 displayName: displayName.trim()
             });
             setSuccess('Profile updated successfully!');
-        } catch (err: any) {
+        } catch {
             setError('Failed to update profile. Please try again.');
         } finally {
             setLoading(false);
@@ -76,10 +79,11 @@ export default function Settings() {
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
-        } catch (err: any) {
-            if (err.code === 'auth/wrong-password') {
+        } catch (err: unknown) {
+            const code = getAuthErrorCode(err);
+            if (code === 'auth/wrong-password') {
                 setError('Current password is incorrect');
-            } else if (err.code === 'auth/requires-recent-login') {
+            } else if (code === 'auth/requires-recent-login') {
                 setError('Please sign out and sign back in before changing your password');
             } else {
                 setError('Failed to change password. Please try again.');
@@ -112,10 +116,11 @@ export default function Settings() {
             await deleteDoc(doc(db, 'users', user.uid));
             await deleteUser(user);
             router.push('/');
-        } catch (err: any) {
-            if (err.code === 'auth/wrong-password') {
+        } catch (err: unknown) {
+            const code = getAuthErrorCode(err);
+            if (code === 'auth/wrong-password') {
                 setError('Incorrect password');
-            } else if (err.code === 'auth/requires-recent-login') {
+            } else if (code === 'auth/requires-recent-login') {
                 setError('Please sign out and sign back in before deleting your account');
             } else {
                 setError('Failed to delete account. Please try again.');

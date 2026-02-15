@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/Button';
 import { useState, useRef } from 'react';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
-const getErrorMessage = (error: any): string => {
-    const code = error.code || '';
+const getErrorMessage = (error: unknown): string => {
+    const code = error instanceof FirebaseError ? error.code : '';
     
     if (code.includes('auth/email-already-in-use')) {
         return 'An account with this email already exists';
@@ -68,7 +69,7 @@ export default function Signup() {
                 displayName: name
             });
             router.push('/dashboard');
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
             // Reset captcha on error
             setCaptchaToken(null);
@@ -86,7 +87,7 @@ export default function Signup() {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
             router.push('/dashboard');
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setLoading(false);
@@ -101,7 +102,7 @@ export default function Signup() {
         return (
             <div className="flex min-h-[80vh] items-center justify-center">
                 <Card variant="panel" className="w-full max-w-md p-8 text-center">
-                    <p className="text-white/70">You're already signed in!</p>
+                    <p className="text-white/70">You&apos;re already signed in!</p>
                     <div className="mt-4 flex gap-3 justify-center">
                         <Button href="/dashboard" variant="primary">Go to Dashboard</Button>
                         <Button href="/" variant="ghost">Go Home</Button>

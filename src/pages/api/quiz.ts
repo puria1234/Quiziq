@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 type QuizQuestion = {
   question: string;
@@ -10,6 +11,19 @@ type QuizQuestion = {
 type QuizPayload = {
   title: string;
   questions: QuizQuestion[];
+};
+
+type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'mixed';
+
+const DIFFICULTY_GUIDES: Record<Difficulty, string> = {
+  beginner:
+    'Use foundational concepts, direct wording, and straightforward distractors. Prioritize basic understanding over nuance.',
+  intermediate:
+    'Use moderate complexity and scenario-based reasoning. Include some nuanced distractors that require comparison.',
+  advanced:
+    'Use rigorous conceptual depth, edge cases, and higher-order reasoning. Distractors should be subtle and intellectually demanding.',
+  mixed:
+    'Mix beginner, intermediate, and advanced questions in balanced proportions for varied difficulty.'
 };
 
 function getSystemPrompt(questionType: string) {
@@ -77,7 +91,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, topic, studyGuide, questionType, count } = req.body || {};
+  const { mode, topic, studyGuide, questionType, difficulty, count, userId } = req.body || {};
+
+  // Check rate limit
+  if (!userId) {
+    return res.status(401).json({ error: 'User authentication required' });
+  }
+
+  try {
+    const rateLimitResult = await checkRateLimit(userId);
+    
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json({ 
+        error: rateLimitResult.reason,
+        rateLimitExceeded: true
+      });
+    }
+
+    // Add rate limit info to response headers
+    res.setHeader('X-RateLimit-Remaining-Daily', rateLimitResult.remaining?.daily.toString() || '0');
+    res.setHeader('X-RateLimit-Remaining-Monthly', rateLimitResult.remaining?.monthly.toString() || '0');
+  } catch (error) {
+    console.error('Rate limit check error:', error);
+    return res.status(500).json({ error: 'Rate limit check failed' });
+  }
 
   // Validate mode and content
   if (!mode || (mode !== 'topic' && mode !== 'studyGuide')) {
@@ -91,6 +128,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const safeCount = Math.min(Math.max(Number(count) || 10, 3), 20);
   const safeQuestionType = questionType || 'multiple-choice';
+  const safeDifficulty: Difficulty =
+    difficulty === 'beginner' ||
+    difficulty === 'intermediate' ||
+    difficulty === 'advanced' ||
+    difficulty === 'mixed'
+      ? difficulty
+      : 'mixed';
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
@@ -102,11 +146,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const maxTokens = Math.min(8000, 800 + safeCount * 350);
     const SYSTEM_PROMPT = getSystemPrompt(safeQuestionType);
+    const difficultyGuide = DIFFICULTY_GUIDES[safeDifficulty];
     
     const randomSeed = Math.random().toString(36).substring(7);
     const userPrompt = mode === 'topic'
-      ? `Generate a UNIQUE and VARIED quiz on the following topic:\n\n${content}\n\nQuestion count: ${safeCount}\n\nMake this quiz different from any previous quizzes. Random seed: ${randomSeed}`
-      : `Generate a UNIQUE quiz based ONLY on the following study guide content. Do not include information outside of this content:\n\n${content}\n\nQuestion count: ${safeCount}\n\nMake this quiz varied and different. Random seed: ${randomSeed}`;
+      ? `Generate a UNIQUE and VARIED quiz on the following topic:\n\n${content}\n\nQuestion count: ${safeCount}\nDifficulty target: ${safeDifficulty}\nDifficulty guidance: ${difficultyGuide}\n\nMake this quiz different from any previous quizzes. Random seed: ${randomSeed}`
+      : `Generate a UNIQUE quiz based ONLY on the following study guide content. Do not include information outside of this content:\n\n${content}\n\nQuestion count: ${safeCount}\nDifficulty target: ${safeDifficulty}\nDifficulty guidance: ${difficultyGuide}\n\nMake this quiz varied and different. Random seed: ${randomSeed}`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -137,7 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let parsed: QuizPayload;
     try {
       parsed = JSON.parse(jsonText);
-    } catch (err) {
+    } catch {
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
 
