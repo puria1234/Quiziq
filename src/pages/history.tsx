@@ -20,8 +20,6 @@ type QuizHistory = {
     mode?: 'topic' | 'studyGuide';
     questionType?: 'multiple-choice' | 'true-false';
     difficulty?: Difficulty;
-    challengeMode?: boolean;
-    timePerQuestion?: number | null;
   };
   analytics?: {
     averageResponseTime?: number;
@@ -98,7 +96,6 @@ export default function History() {
   const [clearing, setClearing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'all' | Difficulty>('all');
-  const [timingFilter, setTimingFilter] = useState<'all' | 'challenge' | 'untimed'>('all');
 
   useEffect(() => {
     if (loading) return;
@@ -132,16 +129,13 @@ export default function History() {
     return history.filter((item) => {
       const searchable = `${item.title} ${item.topic}`.toLowerCase();
       const itemDifficulty = item.settings?.difficulty ?? 'mixed';
-      const isChallenge = Boolean(item.settings?.challengeMode);
 
       if (queryText && !searchable.includes(queryText)) return false;
       if (difficultyFilter !== 'all' && itemDifficulty !== difficultyFilter) return false;
-      if (timingFilter === 'challenge' && !isChallenge) return false;
-      if (timingFilter === 'untimed' && isChallenge) return false;
 
       return true;
     });
-  }, [history, searchQuery, difficultyFilter, timingFilter]);
+  }, [history, searchQuery, difficultyFilter]);
 
   const summary = useMemo(() => {
     if (!history.length) {
@@ -149,7 +143,6 @@ export default function History() {
         totalQuizzes: 0,
         averagePercent: 0,
         bestPercent: 0,
-        challengeSessions: 0,
         averagePace: 0,
         studyStreak: 0
       };
@@ -157,7 +150,6 @@ export default function History() {
 
     const averagePercent = Math.round(history.reduce((sum, item) => sum + item.percent, 0) / history.length);
     const bestPercent = Math.max(...history.map((item) => item.percent));
-    const challengeSessions = history.filter((item) => Boolean(item.settings?.challengeMode)).length;
     const paceValues = history
       .map((item) => item.analytics?.averageResponseTime)
       .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
@@ -169,7 +161,6 @@ export default function History() {
       totalQuizzes: history.length,
       averagePercent,
       bestPercent,
-      challengeSessions,
       averagePace,
       studyStreak: calculateStudyStreak(history)
     };
@@ -233,7 +224,7 @@ export default function History() {
           )}
         </div>
         <p className="max-w-2xl text-sm text-white/70">
-          Track score trends, pace, and challenge-mode sessions to see how your study strategy evolves.
+          Track score trends and pace to see how your study strategy evolves.
         </p>
       </section>
 
@@ -254,10 +245,6 @@ export default function History() {
           <Card variant="simple" className="p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-white/50">Study Streak</p>
             <p className="mt-2 text-2xl font-semibold text-white">{summary.studyStreak} days</p>
-          </Card>
-          <Card variant="simple" className="p-4 sm:col-span-2 lg:col-span-2">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/50">Challenge Sessions</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{summary.challengeSessions}</p>
           </Card>
           <Card variant="simple" className="p-4 sm:col-span-2 lg:col-span-2">
             <p className="text-xs uppercase tracking-[0.2em] text-white/50">Average Pace</p>
@@ -301,7 +288,7 @@ export default function History() {
         ) : (
           <>
             <Card variant="panel" className="mb-4 p-4 sm:p-6">
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 <input
                   type="text"
                   value={searchQuery}
@@ -320,15 +307,6 @@ export default function History() {
                   <option value="advanced" className="text-ink">Advanced</option>
                   <option value="mixed" className="text-ink">Mixed</option>
                 </select>
-                <select
-                  value={timingFilter}
-                  onChange={(event) => setTimingFilter(event.target.value as 'all' | 'challenge' | 'untimed')}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-white/30 focus:outline-none"
-                >
-                  <option value="all" className="text-ink">All Sessions</option>
-                  <option value="challenge" className="text-ink">Challenge Mode Only</option>
-                  <option value="untimed" className="text-ink">Untimed Only</option>
-                </select>
               </div>
             </Card>
 
@@ -341,7 +319,6 @@ export default function History() {
                 {filteredHistory.map((item) => {
                   const difficulty = item.settings?.difficulty ?? 'mixed';
                   const questionType = item.settings?.questionType ?? 'multiple-choice';
-                  const challenge = Boolean(item.settings?.challengeMode);
                   const pace = item.analytics?.averageResponseTime;
                   const streak = item.analytics?.bestStreak;
                   const topicPreview =
@@ -364,9 +341,6 @@ export default function History() {
                             <span className="rounded-full border border-white/15 px-3 py-1">{item.settings?.count || item.total} questions</span>
                             <span className="rounded-full border border-white/15 px-3 py-1">{DIFFICULTY_LABELS[difficulty]}</span>
                             <span className="rounded-full border border-white/15 px-3 py-1">{questionType === 'multiple-choice' ? 'MCQ' : 'True/False'}</span>
-                            <span className="rounded-full border border-white/15 px-3 py-1">
-                              {challenge ? `${item.settings?.timePerQuestion || 30}s challenge` : 'Untimed'}
-                            </span>
                             {typeof pace === 'number' && <span className="rounded-full border border-white/15 px-3 py-1">{pace}s pace</span>}
                             {typeof streak === 'number' && <span className="rounded-full border border-white/15 px-3 py-1">Best streak {streak}</span>}
                           </div>

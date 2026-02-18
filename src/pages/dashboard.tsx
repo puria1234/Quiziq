@@ -39,7 +39,6 @@ type AnswerRecord = {
   selected: number | null;
   correct: number;
   timeSpent: number;
-  timedOut: boolean;
 };
 
 const DIFFICULTY_LABELS: Record<Difficulty, string> = {
@@ -71,8 +70,6 @@ export default function Dashboard() {
   const [studyGuide, setStudyGuide] = useState('');
   const [questionType, setQuestionType] = useState<'multiple-choice' | 'true-false'>('multiple-choice');
   const [difficulty, setDifficulty] = useState<Difficulty>('mixed');
-  const [challengeMode, setChallengeMode] = useState(false);
-  const [timePerQuestion, setTimePerQuestion] = useState(30);
   const [numQuestions, setNumQuestions] = useState('10');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +91,6 @@ export default function Dashboard() {
   const [loadingTopics, setLoadingTopics] = useState(true);
 
   // Unique gameplay state
-  const [timeLeft, setTimeLeft] = useState(timePerQuestion);
   const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -103,7 +99,6 @@ export default function Dashboard() {
   const [hintUsed, setHintUsed] = useState(false);
   const [eliminatedOptions, setEliminatedOptions] = useState<number[]>([]);
   const [hintText, setHintText] = useState<string | null>(null);
-  const [timedOutQuestion, setTimedOutQuestion] = useState(false);
   const [practiceMode, setPracticeMode] = useState(false);
   const [resultCopied, setResultCopied] = useState(false);
   const [rateLimitStatus, setRateLimitStatus] = useState<{ daily: number; monthly: number; dailyLimit: number; monthlyLimit: number } | null>(null);
@@ -151,10 +146,8 @@ export default function Dashboard() {
     setShowExplanation(false);
     setEliminatedOptions([]);
     setHintText(null);
-    setTimedOutQuestion(false);
-    setTimeLeft(timePerQuestion);
     setQuestionStartedAt(Date.now());
-  }, [timePerQuestion]);
+  }, []);
 
   const handleGenerateQuiz = async () => {
     const content = mode === 'topic' ? topic.trim() : studyGuide.trim();
@@ -231,7 +224,7 @@ export default function Dashboard() {
   };
 
   const handleSubmitAnswer = useCallback(
-    (forcedSelection?: number | null, timedOutSubmission = false) => {
+    (forcedSelection?: number | null) => {
       if (!quiz || showExplanation) return;
 
       const currentQ = quiz.questions[currentQuestion];
@@ -239,7 +232,7 @@ export default function Dashboard() {
 
       const answerToUse = forcedSelection !== undefined ? forcedSelection : selectedAnswer;
       if (answerToUse === null || answerToUse === undefined) {
-        if (!timedOutSubmission) return;
+        return;
       }
 
       const elapsedSeconds = questionStartedAt
@@ -264,12 +257,10 @@ export default function Dashboard() {
         {
           selected: answerToUse ?? null,
           correct,
-          timeSpent: elapsedSeconds,
-          timedOut: timedOutSubmission
+          timeSpent: elapsedSeconds
         }
       ]);
       setResponseTimes((prev) => [...prev, elapsedSeconds]);
-      setTimedOutQuestion(timedOutSubmission);
       setShowExplanation(true);
     },
     [quiz, currentQuestion, selectedAnswer, showExplanation, questionStartedAt]
@@ -299,8 +290,6 @@ export default function Dashboard() {
     setStudyGuide('');
     setQuestionType('multiple-choice');
     setDifficulty('mixed');
-    setChallengeMode(false);
-    setTimePerQuestion(30);
     setNumQuestions('10');
     setUploadedFileName(null);
     setCurrentStreak(0);
@@ -310,10 +299,8 @@ export default function Dashboard() {
     setHintUsed(false);
     setEliminatedOptions([]);
     setHintText(null);
-    setTimedOutQuestion(false);
     setPracticeMode(false);
     setResultCopied(false);
-    setTimeLeft(30);
     setQuestionStartedAt(null);
   };
 
@@ -374,9 +361,7 @@ export default function Dashboard() {
     setHintUsed(false);
     setEliminatedOptions([]);
     setHintText(null);
-    setTimedOutQuestion(false);
     setResultCopied(false);
-    setTimeLeft(timePerQuestion);
     setQuestionStartedAt(Date.now());
   };
 
@@ -389,7 +374,6 @@ export default function Dashboard() {
       `Score: ${score}/${quiz.questions.length} (${percentage}%)`,
       `Difficulty: ${DIFFICULTY_LABELS[difficulty]}`,
       `Question Type: ${questionType === 'multiple-choice' ? 'Multiple Choice' : 'True / False'}`,
-      `Challenge Mode: ${challengeMode ? `${timePerQuestion}s per question` : 'Off'}`,
       `Best Streak: ${bestStreak}`,
       `Average Response Time: ${averageResponseSeconds.toFixed(1)}s`
     ].join('\n');
@@ -468,21 +452,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!quiz || quizComplete || showExplanation || !challengeMode) return;
-
-    if (timeLeft <= 0) {
-      handleSubmitAnswer(selectedAnswer, true);
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [quiz, quizComplete, showExplanation, challengeMode, timeLeft, handleSubmitAnswer, selectedAnswer]);
-
-  useEffect(() => {
     if (!quiz || quizComplete) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -540,9 +509,7 @@ export default function Dashboard() {
             count: Number.parseInt(numQuestions, 10) || quiz.questions.length,
             mode,
             questionType,
-            difficulty,
-            challengeMode,
-            timePerQuestion: challengeMode ? timePerQuestion : null
+            difficulty
           },
           analytics: {
             averageResponseTime,
@@ -570,8 +537,6 @@ export default function Dashboard() {
     numQuestions,
     questionType,
     difficulty,
-    challengeMode,
-    timePerQuestion,
     responseTimes,
     bestStreak
   ]);
@@ -596,7 +561,6 @@ export default function Dashboard() {
               <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
                 <span className="badge">{DIFFICULTY_LABELS[difficulty]}</span>
                 <span className="badge">{questionType === 'multiple-choice' ? 'MCQ' : 'True/False'}</span>
-                {challengeMode && <span className="badge">{timePerQuestion}s challenge</span>}
                 {practiceMode && <span className="badge">Mistake Remix</span>}
               </div>
             </div>
@@ -660,9 +624,6 @@ export default function Dashboard() {
                     {!isCorrect && (
                       <p className="text-sm text-green-400">Correct: {q.options[q.answerIndex]}</p>
                     )}
-                    {answerRecord?.timedOut && (
-                      <p className="mt-1 text-xs text-amber-300">Timed out on this question.</p>
-                    )}
                     <p className="mt-1 text-xs text-white/50">Response time: {answerRecord?.timeSpent ?? 0}s</p>
                     <p className="mt-2 text-xs text-white/50">{q.explanation}</p>
                   </div>
@@ -682,8 +643,6 @@ export default function Dashboard() {
   // Active quiz view
   if (quiz) {
     const q = quiz.questions[currentQuestion];
-    const timerProgress = challengeMode ? Math.max(0, (timeLeft / timePerQuestion) * 100) : 100;
-    const timerGradient = timeLeft <= 6 ? 'from-red-500 via-red-400 to-orange-300' : 'from-glow via-flare to-sun';
 
     return (
       <>
@@ -704,20 +663,6 @@ export default function Dashboard() {
               style={{ width: `${((currentQuestion + 1) / quiz.questions.length) * 100}%` }}
             />
           </div>
-          {challengeMode && !showExplanation && (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              <div className="flex items-center justify-between text-xs text-white/70">
-                <span>Challenge clock</span>
-                <span>{timeLeft}s left</span>
-              </div>
-              <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${timerGradient} transition-all duration-500`}
-                  style={{ width: `${timerProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
         </section>
 
         <section className="max-w-3xl mx-auto w-full">
@@ -796,9 +741,6 @@ export default function Dashboard() {
 
             {showExplanation && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-                {timedOutQuestion && (
-                  <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Time ran out</p>
-                )}
                 <p className="text-sm font-semibold text-white/70">Explanation</p>
                 <p className="mt-1 text-sm text-white/50">{q.explanation}</p>
               </div>
@@ -830,7 +772,7 @@ export default function Dashboard() {
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Quiziq</p>
         <h1 className="font-display text-3xl font-bold text-white sm:text-4xl md:text-5xl">Generate Quiz</h1>
         <p className="max-w-2xl text-sm text-white/70">
-          Create quizzes by topic or from your study materials. Dial up difficulty, activate challenge mode, and train with unique lifelines.
+          Create quizzes by topic or from your study materials. Dial up difficulty and train with unique lifelines.
         </p>
         {rateLimitStatus && (
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
@@ -975,57 +917,27 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm text-white/70 mb-2">Number of Questions (3–20)</label>
-                <input
-                  type="number"
-                  min={3}
-                  max={20}
-                  step={1}
-                  value={numQuestions}
-                  onChange={(event) => {
-                    const value = event.target.value.replace(/[^0-9]/g, '');
-                    setNumQuestions(value);
-                    const parsedValue = Number.parseInt(value, 10);
-                    if (value && (!parsedValue || parsedValue < 3 || parsedValue > 20)) {
-                      setError('Please enter a number between 3 and 20');
-                    } else {
-                      setError(null);
-                    }
-                  }}
-                  placeholder="e.g., 10"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-white/30 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-white/70 mb-2">Challenge Mode</label>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <label className="inline-flex items-center gap-2 text-sm text-white/80">
-                    <input
-                      type="checkbox"
-                      checked={challengeMode}
-                      onChange={(event) => setChallengeMode(event.target.checked)}
-                      className="h-4 w-4 rounded border-white/20 bg-white/5"
-                    />
-                    Enable timer per question
-                  </label>
-                  <div className="mt-3">
-                    <select
-                      value={timePerQuestion}
-                      onChange={(event) => setTimePerQuestion(Number(event.target.value))}
-                      disabled={!challengeMode}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white disabled:opacity-50 focus:border-white/30 focus:outline-none"
-                    >
-                      <option value={15} className="text-ink">15 seconds</option>
-                      <option value={30} className="text-ink">30 seconds</option>
-                      <option value={45} className="text-ink">45 seconds</option>
-                      <option value={60} className="text-ink">60 seconds</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Number of Questions (3–20)</label>
+              <input
+                type="number"
+                min={3}
+                max={20}
+                step={1}
+                value={numQuestions}
+                onChange={(event) => {
+                  const value = event.target.value.replace(/[^0-9]/g, '');
+                  setNumQuestions(value);
+                  const parsedValue = Number.parseInt(value, 10);
+                  if (value && (!parsedValue || parsedValue < 3 || parsedValue > 20)) {
+                    setError('Please enter a number between 3 and 20');
+                  } else {
+                    setError(null);
+                  }
+                }}
+                placeholder="e.g., 10"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-white/30 focus:outline-none"
+              />
             </div>
 
             <Button
@@ -1057,7 +969,7 @@ export default function Dashboard() {
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="badge">{DIFFICULTY_LABELS[difficulty]}</span>
               <span className="badge">{questionType === 'multiple-choice' ? 'MCQ' : 'True / False'}</span>
-              {challengeMode ? <span className="badge">{timePerQuestion}s timer</span> : <span className="badge">No timer</span>}
+              <span className="badge">Untimed</span>
             </div>
           </Card>
 
