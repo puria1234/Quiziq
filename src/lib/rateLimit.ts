@@ -1,120 +1,95 @@
+import { createHash } from 'crypto';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 
 interface RateLimitData {
   dailyCount: number;
-  monthlyCount: number;
-  lastDailyReset: string; // ISO date string (YYYY-MM-DD)
-  lastMonthlyReset: string; // ISO date string (YYYY-MM)
+  lastDailyReset: string; // ISO date string (YYYY-MM-DD, UTC)
 }
 
-const DAILY_LIMIT = 20;
-const MONTHLY_LIMIT = 100;
+type RateLimitStatus = {
+  daily: number;
+  dailyLimit: number;
+};
 
-export async function checkRateLimit(userId: string): Promise<{ allowed: boolean; reason?: string; remaining?: { daily: number; monthly: number } }> {
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-  const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+const DAILY_LIMIT = 5;
 
-  const rateLimitRef = doc(db, 'rateLimits', userId);
+function getTodayUTC() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function toRateLimitDocId(ipAddress: string) {
+  const hash = createHash('sha256').update(ipAddress).digest('hex');
+  return `ip_${hash}`;
+}
+
+export async function checkRateLimit(ipAddress: string): Promise<{ allowed: boolean; reason?: string; remaining?: RateLimitStatus }> {
+  const today = getTodayUTC();
+  const rateLimitRef = doc(db, 'rateLimits', toRateLimitDocId(ipAddress));
   const rateLimitDoc = await getDoc(rateLimitRef);
 
   if (!rateLimitDoc.exists()) {
-    // First request - initialize
     await setDoc(rateLimitRef, {
       dailyCount: 1,
-      monthlyCount: 1,
-      lastDailyReset: today,
-      lastMonthlyReset: thisMonth
+      lastDailyReset: today
     });
 
     return {
       allowed: true,
       remaining: {
         daily: DAILY_LIMIT - 1,
-        monthly: MONTHLY_LIMIT - 1
+        dailyLimit: DAILY_LIMIT
       }
     };
   }
 
-  const data = rateLimitDoc.data() as RateLimitData;
-  let { dailyCount, monthlyCount, lastDailyReset, lastMonthlyReset } = data;
+  const data = rateLimitDoc.data() as Partial<RateLimitData>;
+  let dailyCount = typeof data.dailyCount === 'number' ? data.dailyCount : 0;
+  let lastDailyReset = typeof data.lastDailyReset === 'string' ? data.lastDailyReset : today;
 
-  // Reset daily count if it's a new day
   if (lastDailyReset !== today) {
     dailyCount = 0;
     lastDailyReset = today;
   }
 
-  // Reset monthly count if it's a new month
-  if (lastMonthlyReset !== thisMonth) {
-    monthlyCount = 0;
-    lastMonthlyReset = thisMonth;
-  }
-
-  // Check limits
   if (dailyCount >= DAILY_LIMIT) {
     return {
       allowed: false,
-      reason: `Daily limit of ${DAILY_LIMIT} requests exceeded. Resets at midnight.`
+      reason: `Daily limit of ${DAILY_LIMIT} quiz generations per IP address exceeded. Resets at midnight UTC.`
     };
   }
 
-  if (monthlyCount >= MONTHLY_LIMIT) {
-    return {
-      allowed: false,
-      reason: `Monthly limit of ${MONTHLY_LIMIT} requests exceeded. Resets next month.`
-    };
-  }
-
-  // Increment counters
   await updateDoc(rateLimitRef, {
     dailyCount: dailyCount + 1,
-    monthlyCount: monthlyCount + 1,
-    lastDailyReset,
-    lastMonthlyReset
+    lastDailyReset
   });
 
   return {
     allowed: true,
     remaining: {
       daily: DAILY_LIMIT - (dailyCount + 1),
-      monthly: MONTHLY_LIMIT - (monthlyCount + 1)
+      dailyLimit: DAILY_LIMIT
     }
   };
 }
 
-export async function getRateLimitStatus(userId: string): Promise<{ daily: number; monthly: number; dailyLimit: number; monthlyLimit: number }> {
-  const today = new Date().toISOString().split('T')[0];
-  const thisMonth = new Date().toISOString().slice(0, 7);
-
-  const rateLimitRef = doc(db, 'rateLimits', userId);
+export async function getRateLimitStatus(ipAddress: string): Promise<RateLimitStatus> {
+  const today = getTodayUTC();
+  const rateLimitRef = doc(db, 'rateLimits', toRateLimitDocId(ipAddress));
   const rateLimitDoc = await getDoc(rateLimitRef);
 
   if (!rateLimitDoc.exists()) {
     return {
       daily: DAILY_LIMIT,
-      monthly: MONTHLY_LIMIT,
-      dailyLimit: DAILY_LIMIT,
-      monthlyLimit: MONTHLY_LIMIT
+      dailyLimit: DAILY_LIMIT
     };
   }
 
-  const data = rateLimitDoc.data() as RateLimitData;
-  let { dailyCount, monthlyCount, lastDailyReset, lastMonthlyReset } = data;
-
-  // Reset if needed
-  if (lastDailyReset !== today) {
-    dailyCount = 0;
-  }
-
-  if (lastMonthlyReset !== thisMonth) {
-    monthlyCount = 0;
-  }
+  const data = rateLimitDoc.data() as Partial<RateLimitData>;
+  const dailyCount = data.lastDailyReset === today && typeof data.dailyCount === 'number' ? data.dailyCount : 0;
 
   return {
-    daily: DAILY_LIMIT - dailyCount,
-    monthly: MONTHLY_LIMIT - monthlyCount,
-    dailyLimit: DAILY_LIMIT,
-    monthlyLimit: MONTHLY_LIMIT
+    daily: Math.max(0, DAILY_LIMIT - dailyCount),
+    dailyLimit: DAILY_LIMIT
   };
 }

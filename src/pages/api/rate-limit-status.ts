@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getClientIp } from '@/lib/clientIp';
 import { getRateLimitStatus } from '@/lib/rateLimit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -7,14 +8,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { userId } = req.query;
-
-  if (!userId || typeof userId !== 'string') {
-    return res.status(400).json({ error: 'userId is required' });
+  const clientIp = getClientIp(req);
+  if (!clientIp) {
+    return res.status(400).json({ error: 'Unable to determine client IP for rate limiting' });
   }
 
   try {
-    const status = await getRateLimitStatus(userId);
+    const status = await getRateLimitStatus(clientIp);
     return res.status(200).json(status);
   } catch (error) {
     console.error('Rate limit status error:', error);

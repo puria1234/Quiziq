@@ -101,15 +101,14 @@ export default function Dashboard() {
   const [hintText, setHintText] = useState<string | null>(null);
   const [practiceMode, setPracticeMode] = useState(false);
   const [resultCopied, setResultCopied] = useState(false);
-  const [rateLimitStatus, setRateLimitStatus] = useState<{ daily: number; monthly: number; dailyLimit: number; monthlyLimit: number } | null>(null);
+  const [rateLimitStatus, setRateLimitStatus] = useState<{ daily: number; dailyLimit: number } | null>(null);
 
   const averageResponseSeconds = useMemo(() => getAverageTime(responseTimes), [responseTimes]);
 
   useEffect(() => {
     const fetchRateLimitStatus = async () => {
-      if (!user?.uid) return;
       try {
-        const res = await fetch(`/api/rate-limit-status?userId=${user.uid}`);
+        const res = await fetch('/api/rate-limit-status');
         if (res.ok) {
           const data = await res.json();
           setRateLimitStatus(data);
@@ -119,7 +118,7 @@ export default function Dashboard() {
       }
     };
     fetchRateLimitStatus();
-  }, [user?.uid]);
+  }, []);
 
   useEffect(() => {
     const fetchTrendingTopics = async () => {
@@ -174,8 +173,7 @@ export default function Dashboard() {
           studyGuide: mode === 'studyGuide' ? studyGuide.trim() : undefined,
           questionType,
           difficulty,
-          count: parsed,
-          userId: user?.uid
+          count: parsed
         })
       });
 
@@ -194,12 +192,10 @@ export default function Dashboard() {
       setQuizComplete(false);
       
       // Update rate limit status after successful generation
-      if (user?.uid) {
-        const statusRes = await fetch(`/api/rate-limit-status?userId=${user.uid}`);
-        if (statusRes.ok) {
-          const statusData = await statusRes.json();
-          setRateLimitStatus(statusData);
-        }
+      const statusRes = await fetch('/api/rate-limit-status');
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        setRateLimitStatus(statusData);
       }
       setAnswers([]);
       setResponseTimes([]);
@@ -777,15 +773,9 @@ export default function Dashboard() {
         {rateLimitStatus && (
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             <div className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10">
-              <span className="text-white/50">Daily: </span>
-              <span className={rateLimitStatus.daily <= 5 ? 'text-red-400 font-semibold' : 'text-white'}>
+              <span className="text-white/50">Daily (IP): </span>
+              <span className={rateLimitStatus.daily <= 1 ? 'text-red-400 font-semibold' : 'text-white'}>
                 {rateLimitStatus.daily}/{rateLimitStatus.dailyLimit}
-              </span>
-            </div>
-            <div className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10">
-              <span className="text-white/50">Monthly: </span>
-              <span className={rateLimitStatus.monthly <= 10 ? 'text-red-400 font-semibold' : 'text-white'}>
-                {rateLimitStatus.monthly}/{rateLimitStatus.monthlyLimit}
               </span>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getClientIp } from '@/lib/clientIp';
 import { checkRateLimit } from '@/lib/rateLimit';
 
 type QuizQuestion = {
@@ -91,18 +92,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, topic, studyGuide, questionType, difficulty, count, userId } = req.body || {};
+  const { mode, topic, studyGuide, questionType, difficulty, count } = req.body || {};
 
   // Check rate limit
-  if (!userId) {
-    return res.status(401).json({ error: 'User authentication required' });
+  const clientIp = getClientIp(req);
+  if (!clientIp) {
+    return res.status(400).json({ error: 'Unable to determine client IP for rate limiting' });
   }
 
   try {
-    const rateLimitResult = await checkRateLimit(userId);
-    
+    const rateLimitResult = await checkRateLimit(clientIp);
+
     if (!rateLimitResult.allowed) {
-      return res.status(429).json({ 
+      return res.status(429).json({
         error: rateLimitResult.reason,
         rateLimitExceeded: true
       });
@@ -110,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Add rate limit info to response headers
     res.setHeader('X-RateLimit-Remaining-Daily', rateLimitResult.remaining?.daily.toString() || '0');
-    res.setHeader('X-RateLimit-Remaining-Monthly', rateLimitResult.remaining?.monthly.toString() || '0');
+    res.setHeader('X-RateLimit-Limit-Daily', rateLimitResult.remaining?.dailyLimit.toString() || '5');
   } catch (error) {
     console.error('Rate limit check error:', error);
     return res.status(500).json({ error: 'Rate limit check failed' });
