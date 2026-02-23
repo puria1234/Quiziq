@@ -773,7 +773,7 @@ export default function Dashboard() {
         {rateLimitStatus && (
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             <div className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10">
-              <span className="text-white/50">Daily (IP): </span>
+              <span className="text-white/50">Daily: </span>
               <span className={rateLimitStatus.daily <= 1 ? 'text-red-400 font-semibold' : 'text-white'}>
                 {rateLimitStatus.daily}/{rateLimitStatus.dailyLimit}
               </span>
